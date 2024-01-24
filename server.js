@@ -3,8 +3,13 @@ const express = require('express');
 const axios = require('axios');
 
 require('dotenv').config();
+const cors = require('cors');
 
 const app = express();
+
+// Enable CORS for all routes
+app.use(cors());
+
 const port = process.env.PORT;
 const store_hash = process.env.STORE_HASH;
 const access_token = process.env.ACCESS_TOKEN
