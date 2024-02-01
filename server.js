@@ -47,11 +47,11 @@ app.post('/api/login', async (req, res) => {
 
     if (response.status === 200) {
       // Successful validation
-      console.log("Validate completed");
+      // console.log("Validate completed");
       res.json({ message: 'Store validation successful' });
     } else {
       // Failed validation
-      console.log("validation failed");
+      // console.log("validation failed");
       res.status(response.status).json({ message: 'Store validation failed' });
     }
   } catch (error) {
@@ -101,3 +101,61 @@ app.get('/api/data', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+
+
+
+
+
+
+// Get the current user session id
+
+app.post('/get_current_sid', async (req, res) => {
+  const s_id = req.body.session_id;
+  console.log('Received session ID:', s_id);
+
+  // Now, send the session ID to the validation endpoint
+  // You can use a library like Axios to make an HTTP request to another endpoint
+  // For simplicity, let's assume a synchronous validation function for now
+  const isValid = await validateSession(s_id);
+
+  if (isValid) {
+    res.json({ message: 'Session ID received and validated successfully.' });
+  } else {
+    res.status(401).json({ error: 'Invalid session' });
+  }
+
+});
+
+
+// Validation function (same as in Endpoint 1)
+async function validateSession(sessionId) {
+  console.log('for validate the session with id',sessionId);
+  // Assuming you have a Django endpoint for validation
+  const djangoEndpoint = 'https://merry-poetic-gecko.ngrok-free.app/api/authuser';
+  try {
+    // Make an HTTP POST request to the Django endpoint with the session ID
+    const response = await axios.post(djangoEndpoint, { session_id: sessionId });
+    if (response.data.isValid) {
+      // Return true if valid
+      return true;
+    } else {
+      // Return false if not valid
+      return false;
+    }
+  } catch (error) {
+    console.error('Error validating session with Django:', error);
+    // Handle errors and return false if validation fails
+    return false;
+  }
+}
+
+
+
+
+
+
+
+
+
+
