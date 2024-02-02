@@ -15,19 +15,18 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const port = process.env.PORT;
-const store_hash = process.env.STORE_HASH;
-const access_token = process.env.ACCESS_TOKEN;
+let globalStoreHash = '';
+let globalStoreToken = '';
+// const store_hash = process.env.STORE_HASH;
+// const access_token = process.env.ACCESS_TOKEN;
 
 
-
-// Mock user credentials for demonstration purposes
-const validCredentials = {
-  correctStoreHash: '',
-  correctStoreToken: '',
-};
 
 app.post('/api/login', async (req, res) => {
   const { storeHash, storeToken } = req.body;
+
+  globalStoreHash = storeHash;
+  globalStoreToken = storeToken;
 
   // Validate user credentials with BigCommerce API
   try {
@@ -60,8 +59,11 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+
+
 app.get('/api/data', async (req, res) => {
-  const url = `https://api.bigcommerce.com/stores/${store_hash}/v3/catalog/products`;
+
+  const url = `https://api.bigcommerce.com/stores/${globalStoreHash}/v3/catalog/products`;
 
   let config = {
     method: 'get',
@@ -69,7 +71,7 @@ app.get('/api/data', async (req, res) => {
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      'X-Auth-Token': access_token
+      'X-Auth-Token': globalStoreToken
     }
   };
 
