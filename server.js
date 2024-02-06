@@ -3,9 +3,8 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require('body-parser'); // Added for parsing request body
-
+var request = require('request');
 require('dotenv').config();
-
 const app = express();
 
 // Enable CORS for all routes
@@ -17,8 +16,7 @@ app.use(bodyParser.json());
 const port = process.env.PORT;
 const store_hash = process.env.STORE_HASH;
 const access_token = process.env.ACCESS_TOKEN;
-
-
+const django_endpoint_baseurl = process.env.DJANGO_ENDPOINT_BASE_URL;
 
 // Mock user credentials for demonstration purposes
 const validCredentials = {
@@ -28,11 +26,9 @@ const validCredentials = {
 
 app.post('/api/login', async (req, res) => {
   const { storeHash, storeToken } = req.body;
-
   // Validate user credentials with BigCommerce API
   try {
     const url = `https://api.bigcommerce.com/stores/${storeHash}/v2/store`;
-
     const config = {
       method: 'get',
       url: url,
@@ -102,51 +98,33 @@ app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
-
-
-
-
-
-
 // Get the current user session id
-
 app.post('/get_current_sid', async (req, res) => {
   const s_id = req.body.session_id;
   console.log('Received session ID:', s_id);
-
-  // Now, send the session ID to the validation endpoint
-  // You can use a library like Axios to make an HTTP request to another endpoint
-  // For simplicity, let's assume a synchronous validation function for now
-  const isValid = await validateSession(s_id);
-
-  if (isValid) {
-    res.json({ message: 'Session ID received and validated successfully.' });
-  } else {
-    res.status(401).json({ error: 'Invalid session' });
-  }
-
-});
-
+  const token = req.body.token
+  console.log('Received tokent here',token)
+  const userData = await validateSession(s_id,token)
+  console.log('I am user data is here',userData)
+  res.json({ message: 'Session ID received and validated successfully.' });
+}); 
 
 // Validation function (same as in Endpoint 1)
-async function validateSession(sessionId) {
-  console.log('for validate the session with id',sessionId);
-  // Assuming you have a Django endpoint for validation
-  const djangoEndpoint = 'https://merry-poetic-gecko.ngrok-free.app/api/authuser';
+async function validateSession(s_id,token) {
   try {
-    // Make an HTTP POST request to the Django endpoint with the session ID
-    const response = await axios.post(djangoEndpoint, { session_id: sessionId });
-    if (response.data.isValid) {
-      // Return true if valid
-      return true;
-    } else {
-      // Return false if not valid
-      return false;
-    }
+    var options = {
+      'method': 'GET',
+      'url': `${django_endpoint_baseurl}/api/authuser?sessionkey=${s_id}`,
+      'headers': {
+        'Authorization': `Token ${token}`
+      }
+    };
+    request(options, function (error, response) {
+      if (error) throw new Error(error);
+      console.log(response.body);
+     });
   } catch (error) {
     console.error('Error validating session with Django:', error);
-    // Handle errors and return false if validation fails
-    return false;
   }
 }
 
