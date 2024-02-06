@@ -119,9 +119,13 @@ async function validateSession(s_id,token) {
         'Authorization': `Token ${token}`
       }
     };
+
+    console.log('what is options here',options)
+
+
     request(options, function (error, response) {
       if (error) throw new Error(error);
-      console.log(response.body);
+      console.log(response.body.email);
      });
   } catch (error) {
     console.error('Error validating session with Django:', error);
