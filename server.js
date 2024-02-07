@@ -103,34 +103,33 @@ app.listen(port, () => {
 app.post('/get_current_sid', async (req, res) => {
   const s_id = req.body.session_id;
   console.log('Received session ID:', s_id);
-  const token = req.body.token
-  console.log('Received tokent here',token)
+  const token = req.body.token;
+  console.log('Received token here',token);
   const userData = await validateSession(s_id,token)
-  console.log('I am user data is here',userData)
+  console.log('>>>>>> USER DATA IS HERE >>>>>>>>>>',userData.data)
   res.json({ message: 'Session ID received and validated successfully.' });
 }); 
 
 // Validation function (same as in Endpoint 1)
-async function validateSession(s_id,token) {
+async function validateSession(s_id, token) {
   try {
-    var options = {
-      'method': 'GET',
-      'url': `${django_endpoint_baseurl}/api/authuser?sessionkey=${s_id}`,
-      'headers': {
-        'Authorization': `Token ${token}`
+    const options = {
+      method: 'GET',
+      url: `${django_endpoint_baseurl}/api/authuser?sessionkey=${s_id}`,
+      headers: {
+        Authorization: `Token ${token}`
       }
     };
-
-    console.log('what is options here',options)
-
-    request(options, function (error, response) {
-      if (error) throw new Error(error);
-      console.log('What is my response...........',response.body);
-     });
+    const response = await axios(options);
+    return response;
   } catch (error) {
     console.error('Error validating session with Django:', error);
+    throw error;
   }
 }
+
+
+
 
 
 
