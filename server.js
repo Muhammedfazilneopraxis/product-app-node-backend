@@ -3,9 +3,8 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require('body-parser'); // Added for parsing request body
-
+var request = require('request');
 require('dotenv').config();
-
 const app = express();
 
 // Enable CORS for all routes
@@ -17,8 +16,7 @@ app.use(bodyParser.json());
 const port = process.env.PORT;
 const store_hash = process.env.STORE_HASH;
 const access_token = process.env.ACCESS_TOKEN;
-
-
+const django_endpoint_baseurl = process.env.DJANGO_ENDPOINT_BASE_URL;
 
 // Mock user credentials for demonstration purposes
 const validCredentials = {
@@ -28,11 +26,9 @@ const validCredentials = {
 
 app.post('/api/login', async (req, res) => {
   const { storeHash, storeToken } = req.body;
-
   // Validate user credentials with BigCommerce API
   try {
     const url = `https://api.bigcommerce.com/stores/${storeHash}/v2/store`;
-
     const config = {
       method: 'get',
       url: url,
@@ -47,11 +43,11 @@ app.post('/api/login', async (req, res) => {
 
     if (response.status === 200) {
       // Successful validation
-      console.log("Validate completed");
+      // console.log("Validate completed");
       res.json({ message: 'Store validation successful' });
     } else {
       // Failed validation
-      console.log("validation failed");
+      // console.log("validation failed");
       res.status(response.status).json({ message: 'Store validation failed' });
     }
   } catch (error) {
@@ -101,3 +97,47 @@ app.get('/api/data', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
+
+// Get the current user session id
+app.post('/get_current_sid', async (req, res) => {
+  const s_id = req.body.session_id;
+  console.log('Received session ID:', s_id);
+  const token = req.body.token
+  console.log('Received tokent here',token)
+  const userData = await validateSession(s_id,token)
+  console.log('I am user data is here',userData)
+  res.json({ message: 'Session ID received and validated successfully.' });
+}); 
+
+// Validation function (same as in Endpoint 1)
+async function validateSession(s_id,token) {
+  try {
+    var options = {
+      'method': 'GET',
+      'url': `${django_endpoint_baseurl}/api/authuser?sessionkey=${s_id}`,
+      'headers': {
+        'Authorization': `Token ${token}`
+      }
+    };
+
+    console.log('what is options here',options)
+
+
+    request(options, function (error, response) {
+      if (error) throw new Error(error);
+      console.log(response.body.email);
+     });
+  } catch (error) {
+    console.error('Error validating session with Django:', error);
+  }
+}
+
+
+
+
+
+
+
+
+
+
