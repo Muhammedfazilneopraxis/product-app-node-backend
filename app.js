@@ -1,15 +1,13 @@
-// server.js
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const bodyParser = require('body-parser'); // Added for parsing request body
-var request = require('request');
+const request = require('request');
+
 require('dotenv').config();
 const app = express();
-
 // Enable CORS for all routes
 app.use(cors());
-
 // Body parser middleware
 app.use(bodyParser.json());
 
@@ -18,12 +16,9 @@ const store_hash = process.env.STORE_HASH;
 const access_token = process.env.ACCESS_TOKEN;
 const django_endpoint_baseurl = process.env.DJANGO_ENDPOINT_BASE_URL;
 
-// Mock user credentials for demonstration purposes
-const validCredentials = {
-  correctStoreHash: '',
-  correctStoreToken: '',
-};
 
+// Mock user credentials for demonstration purposes
+const validCredentials = {correctStoreHash: '',correctStoreToken: ''};
 app.post('/api/login', async (req, res) => {
   const { storeHash, storeToken } = req.body;
   // Validate user credentials with BigCommerce API
@@ -82,7 +77,6 @@ app.get('/api/data', async (req, res) => {
           price: product.price,
           sku: product.sku,
         };
-
       });
       // Send only the product IDs in the response
       res.json({ message: 'Product IDs fetched successfully', productDetails });
