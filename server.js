@@ -107,7 +107,7 @@ app.post('/get_current_sid', async (req, res) => {
   console.log('Received token here',token);
   const userData = await validateSession(s_id,token)
   console.log('>>>>>> USER DATA IS HERE >>>>>>>>>>',userData.data)
-  res.json({ message: 'Session ID received and validated successfully.' });
+  res.json({ message: 'Session ID received and validated successfully.' , userData: userData });
 }); 
 
 // Validation function (same as in Endpoint 1)
