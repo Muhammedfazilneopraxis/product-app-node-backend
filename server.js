@@ -71,6 +71,7 @@ app.get('/api/data', async (req, res) => {
 
   try {
     const response = await axios(config);
+
     // Check if response.data is an object with a 'data' property
     if (response.data && Array.isArray(response.data.data)) {
       // Extracting product IDs
@@ -122,10 +123,9 @@ async function validateSession(s_id,token) {
 
     console.log('what is options here',options)
 
-
     request(options, function (error, response) {
       if (error) throw new Error(error);
-      console.log(response.body.email);
+      console.log('What is my response...........',response.body);
      });
   } catch (error) {
     console.error('Error validating session with Django:', error);
