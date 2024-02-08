@@ -1,0 +1,2 @@
+// This folder contains middleware functions, which are functions that have access to the request and response objects and can modify them or perform additional processing before passing them on to the next middleware function in the stack.
+// Example: authMiddleware.js - This file might contain middleware functions specific to authentication for metafield-related requests, such as verifying the validity of authentication tokens or checking user permissions before allowing access to certain endpoints.

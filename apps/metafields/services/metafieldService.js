@@ -1,0 +1,3 @@
+// This folder contains the business logic of your application.
+//  Services encapsulate reusable business logic that can be used by multiple controllers or other parts of your application.
+// Example: metafieldService.js - This file might contain functions that implement the core logic for working with metafields, such as validating input data, interacting with the database, or performing any necessary calculations or transformations.
