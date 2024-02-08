@@ -1,15 +1,29 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-const bodyParser = require('body-parser'); // Added for parsing request body
-const request = require('request');
+const express = require('express');  // Framework for building web applications
+const bodyParser = require('body-parser');  // Middleware for parsing request bodies
+const cors = require('cors');  // Middleware for enabling Cross-Origin Resource Sharing
+const axios = require('axios'); 
 
-require('dotenv').config();
+require('request');
+const dotenv = require('dotenv').config(); // Load environment variables from .env file
+
 const app = express();
-// Enable CORS for all routes
-app.use(cors());
-// Body parser middleware
-app.use(bodyParser.json());
+
+// Define allowed origins
+const allowedOrigins = [
+  'http://localhost:3001',
+  'http://localhost:3002'
+];
+
+
+app.use(cors({origin: allowedOrigins})); // Enable CORS with multiple origins
+app.use(bodyParser.json()); // Body parser middleware
+
+
+
+// console.log('what is dot config inside',dotenv);
+
+// console.log('what is dot config inside',dotenv.parsed.STORE_HASH);
+
 
 const port = process.env.PORT;
 const store_hash = process.env.STORE_HASH;
@@ -17,8 +31,13 @@ const access_token = process.env.ACCESS_TOKEN;
 const django_endpoint_baseurl = process.env.DJANGO_ENDPOINT_BASE_URL;
 
 
+
 // Mock user credentials for demonstration purposes
-const validCredentials = {correctStoreHash: '',correctStoreToken: ''};
+const validCredentials = {
+  correctStoreHash: '',
+  correctStoreToken: ''
+};
+
 app.post('/api/login', async (req, res) => {
   const { storeHash, storeToken } = req.body;
   // Validate user credentials with BigCommerce API
