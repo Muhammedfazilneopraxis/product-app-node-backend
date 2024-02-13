@@ -99,16 +99,54 @@ app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
+
+let sessionData = {}; // Define a variable to store session data
+
 // Get the current user session id
 app.post('/get_current_sid', async (req, res) => {
-  const s_id = req.body.session_id;
-  console.log('Received session ID:', s_id);
-  const token = req.body.token;
-  console.log('Received token here',token);
+  const s_id = req.body.current_id;  
+  const token = req.body.current_token;  
+  // Store session data
+  // sessionData = { session_id: s_id, token: token };
   const userData = await validateSession(s_id,token)
-  console.log('>>>>>> USER DATA IS HERE >>>>>>>>>>',userData.data)
-  res.json({ message: 'Session ID received and validated successfully.' , userData: userData });
+  console.log('<<<<<<< USER DATA IS HERE >>>>>>>>>>',userData.data)
+  res.json({ message: 'Session ID received and validated successfully.'});
 }); 
+
+
+// Define route handler for GET request to '/uuid
+app.get('/uuid', async (req, res) => {
+  const url = `http://127.0.0.1:8000/get-data`;
+
+  let config = {
+    method: 'get',
+    url: url,
+    headers: {
+      Accept: 'application/json',
+
+      
+    }
+  };
+
+  try {
+    const response = await axios(config);
+
+    console.log('what is my response here',response)
+
+    const session_id = response.data.session_id;
+    const token = response.data.token;
+
+
+    console.log(session_id,"session id is here");
+    console.log(token,"token  is here");
+
+  } catch (err) {
+    console.error('error:', err);
+    res.status(500).json({ message: 'Error fetching data' });
+  }
+});
+
+
 
 // Validation function (same as in Endpoint 1)
 async function validateSession(s_id, token) {
