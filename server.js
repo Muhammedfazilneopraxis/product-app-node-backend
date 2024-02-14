@@ -106,65 +106,90 @@ let sessionData = {}; // Define a variable to store session data
 app.post('/get_current_sid', async (req, res) => {
   const s_id = req.body.current_id;  
   const token = req.body.current_token;  
+
+  console.log(`
+        sid is here ${s_id}
+        token is here ${token}
+  `);
+
   // Store session data
   // sessionData = { session_id: s_id, token: token };
+ 
+  // console.log(sessionData)
+ 
   const userData = await validateSession(s_id,token)
-  console.log('<<<<<<< USER DATA IS HERE >>>>>>>>>>',userData.data)
-  res.json({ message: 'Session ID received and validated successfully.'});
+  console.log('<<<<<<< USER DATA IS HERE 555 >>>>>>>>>>',userData)
+ 
+  res.json({ message: 'Session ID received and validated successfully.',userData});
 }); 
 
 
 // Define route handler for GET request to '/uuid
-app.get('/uuid', async (req, res) => {
-  const url = `http://127.0.0.1:8000/get-data`;
+// app.get('/uuid', async (req, res) => {
+//   const url = `http://127.0.0.1:8000/get-data`;
 
-  let config = {
-    method: 'get',
-    url: url,
-    headers: {
-      Accept: 'application/json',
+//   let config = {
+//     method: 'get',
+//     url: url,
+//     headers: {
+//       Accept: 'application/json',
 
       
-    }
-  };
+//     }
+//   };
 
-  try {
-    const response = await axios(config);
+//   try {
+//     const response = await axios(config);
 
-    console.log('what is my response here',response)
+//     console.log('what is my response here',response)
 
-    const session_id = response.data.session_id;
-    const token = response.data.token;
+//     const session_id = response.data.session_id;
+//     const token = response.data.token;
 
 
-    console.log(session_id,"session id is here");
-    console.log(token,"token  is here");
+//     console.log(session_id,"session id is here");
+//     console.log(token,"token  is here");
 
-  } catch (err) {
-    console.error('error:', err);
-    res.status(500).json({ message: 'Error fetching data' });
-  }
-});
+//   } catch (err) {
+//     console.error('error:', err);
+//     res.status(500).json({ message: 'Error fetching data' });
+//   }
+// });
 
 
 
 // Validation function (same as in Endpoint 1)
 async function validateSession(s_id, token) {
+
+  console.log('in validate session is here',s_id,token)
+  
+
   try {
-    const options = {
-      method: 'GET',
-      url: `${django_endpoint_baseurl}/api/authuser?sessionkey=${s_id}`,
-      headers: {
-        Authorization: `Token ${token}`
+      var sid = s_id
+
+      console.log('what is my sid here',sid);
+
+      url = `${django_endpoint_baseurl}/api/authuser?sessionkey=${sid}`
+
+      console.log('what is my url for the call',url);
+
+
+      if(token){
+        const options = {
+          method: 'GET',
+          url:url,
+          headers: {Authorization: `Token ${token}`}
+        };
+  
+        const response =  await axios(options);
+        return response.data;
       }
-    };
-    const response = await axios(options);
-    return response;
-  } catch (error) {
-    console.error('Error validating session with Django:', error);
-    throw error;
+    } catch (error) {
+      console.error('Error validating session with Django:', error);
+      throw error;
+    }
+
   }
-}
 
 
 
