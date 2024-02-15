@@ -75,11 +75,13 @@ var userData = {}
 
 // Get the current user session id
 app.post('/get_current_sid', async (req, res) => {
-  const s_id = req.body.current_id;  
-  const token = req.body.current_token;   
-  userData = await validateSession(s_id,token)
-  console.log('<<<<<<< USER DATA IS HERE 555 >>>>>>>>>>',userData)
-  res.json({ message: 'Session ID received and validated successfully.',userData});
+  // console.log('what is get current sid')
+
+  // const s_id = req.body.current_id;  
+  // const token = req.body.current_token;   
+  // userData = await validateSession(s_id,token)
+  // console.log('<<<<<<< USER DATA IS HERE 555 >>>>>>>>>>',userData)
+  res.json({ message: 'Session ID received and validated successfully.'});
 }); 
 
 
@@ -106,14 +108,11 @@ async function validateSession(s_id, token) {
 
 
   app.post('/api/login', async (req, res) => {
+    const { storeHash, storeToken,jwt_token } = req.body;
 
-    console.log(`what is login user data ................`,userData.email)
+    console.log(jwt_token)
 
-
-
-    const { storeHash, storeToken } = req.body;
     
-    console.log(`what is my storehash ${storeHash} and token is ${storeToken}`)
 
     // Validate user credentials with BigCommerce API
     try {
@@ -130,6 +129,9 @@ async function validateSession(s_id, token) {
       };
   
       const response = await axios(config);
+
+      // console.log('store response =====>',response)
+
   
       if (response.status === 200) {
         // Successful validation
