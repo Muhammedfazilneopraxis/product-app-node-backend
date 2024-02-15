@@ -8,6 +8,11 @@ var request = require('request');
 require('dotenv').config();
 const app = express();
 
+
+// Decode jwt token
+const jwt = require('jsonwebtoken');
+
+
 // Enable CORS for all routes
 app.use(cors());
 
@@ -106,13 +111,27 @@ async function validateSession(s_id, token) {
   }
 
 
+// Function to decode jwt token recieves 
+async function decodeJwt(token) {
+    try {
+        const decodedToken = jwt.decode(token);
+        return decodedToken;
+    } catch (error) {
+        console.error('Error decoding JWT:', error);
+        return null;
+    }
+}
+
 
   app.post('/api/login', async (req, res) => {
     const { storeHash, storeToken,jwt_token } = req.body;
 
     console.log(jwt_token)
-
     
+    const decodedData = await decodeJwt(jwt_token);
+    console.log(decodedData);
+    console.log(decodedData.user.useremail);
+
 
     // Validate user credentials with BigCommerce API
     try {
@@ -132,15 +151,21 @@ async function validateSession(s_id, token) {
 
       // console.log('store response =====>',response)
 
-  
-      if (response.status === 200) {
-        // Successful validation
-        // console.log("Validate completed");
-        res.json({ message: 'Store validation successful' });
-      } else {
-        // Failed validation
-        // console.log("validation failed");
-        res.status(response.status).json({ message: 'Store validation failed' });
+      if(decodedData.user.useremail){
+        if (response.status === 200) {
+          // Successful validation
+          // console.log("Validate completed");
+          res.json({ message: 'Store validation successful',user:decodedData.user});
+
+        //   res.json({ 
+        //     message: 'Store validation successful',
+        //     user: decodedData.user // Sending user data extracted from the decoded token
+        // });
+        } else {
+          // Failed validation
+          // console.log("validation failed");
+          res.status(response.status).json({ message: 'Store validation failed' });
+        }
       }
     } catch (error) {
       console.error('Error during store validation:', error);
