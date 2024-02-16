@@ -149,18 +149,28 @@ async function decodeJwt(token) {
   
       const response = await axios(config);
 
-      // console.log('store response =====>',response)
+      // console.log('store response =====>',response.data)
+
+      var userstoreData = {
+        "store_name":response.data.name,
+        "store_logo":response.data.logo.url,
+        "default_channel_id":response.data.default_channel_id
+      }
+
+      // console.log('what is my userstoredata',userstoreData)
 
       if(decodedData.user.useremail){
         if (response.status === 200) {
           // Successful validation
           // console.log("Validate completed");
-          res.json({ message: 'Store validation successful',user:decodedData.user});
+          // res.json({ message: 'Store validation successful',user:decodedData.user});
 
-        //   res.json({ 
-        //     message: 'Store validation successful',
-        //     user: decodedData.user // Sending user data extracted from the decoded token
-        // });
+          res.json({ 
+            message: 'Store validation successful',
+            status:200,
+            user: decodedData.user,// Sending user data extracted from the decoded token,
+            storedata:userstoreData
+        });
         } else {
           // Failed validation
           // console.log("validation failed");
