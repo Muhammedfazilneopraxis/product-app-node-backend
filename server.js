@@ -7,7 +7,12 @@ const bodyParser = require('body-parser'); // Added for parsing request body
 var request = require('request');
 require('dotenv').config();
 const app = express();
+app.use(express.json())
 
+require("./conn/conn")
+const auth = require("./routes/auth")
+
+app.use("/api/v1",auth);
 
 // Decode jwt token
 const jwt = require('jsonwebtoken');
