@@ -10,9 +10,10 @@ const app = express();
 app.use(express.json())
 
 require("./conn/conn")
-const auth = require("./routes/auth")
 
-app.use("/api/v1",auth);
+// const auth = require("./routes/auth")
+
+// app.use("/api/v1",auth);
 
 // Decode jwt token
 const jwt = require('jsonwebtoken');
@@ -34,6 +35,10 @@ const django_endpoint_baseurl = process.env.DJANGO_ENDPOINT_BASE_URL;
 
 // Mock user credentials for demonstration purposes
 const validCredentials = {correctStoreHash: '',correctStoreToken: '',};
+
+
+const UserData = require("./models/userdata")
+
 
 
 app.get('/api/data', async (req, res) => {
@@ -129,14 +134,23 @@ async function decodeJwt(token) {
 
 
   app.post('/api/login', async (req, res) => {
-    const { storeHash, storeToken,jwt_token } = req.body;
+    const { storeHash, storeToken,jwt_token } = req.body;    
+    console.log('what is req',req.body)
 
-    console.log(jwt_token)
-    
-    const decodedData = await decodeJwt(jwt_token);
-    console.log(decodedData);
-    console.log(decodedData.user.useremail);
+    const decodedData = await decodeJwt(jwt_token);    
+    console.log('what is decoded data',decodedData)
 
+    const {useremail,userid} = decodedData.user
+
+
+
+    console.log('what is data to send >>>',userid, useremail, storeHash, storeToken)
+
+
+    console.log('store hash and token is exists')
+
+
+    console.log('stored in db successfull ===>')
 
     // Validate user credentials with BigCommerce API
     try {
@@ -170,12 +184,16 @@ async function decodeJwt(token) {
           // console.log("Validate completed");
           // res.json({ message: 'Store validation successful',user:decodedData.user});
 
+          const users = new UserData({userid, useremail, storeHash, storeToken})
+          await users.save();
+
           res.json({ 
             message: 'Store validation successful',
             status:200,
             user: decodedData.user,// Sending user data extracted from the decoded token,
             storedata:userstoreData
         });
+
         } else {
           // Failed validation
           // console.log("validation failed");
