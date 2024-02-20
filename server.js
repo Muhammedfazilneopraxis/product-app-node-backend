@@ -34,7 +34,7 @@ const access_token = process.env.ACCESS_TOKEN;
 const django_endpoint_baseurl = process.env.DJANGO_ENDPOINT_BASE_URL;
 
 // Mock user credentials for demonstration purposes
-const validCredentials = {correctStoreHash: '',correctStoreToken: '',};
+const validCredentials = { correctStoreHash: '', correctStoreToken: '', };
 
 
 const UserData = require("./models/userdata")
@@ -96,116 +96,122 @@ app.post('/get_current_sid', async (req, res) => {
   // const token = req.body.current_token;   
   // userData = await validateSession(s_id,token)
   // console.log('<<<<<<< USER DATA IS HERE 555 >>>>>>>>>>',userData)
-  res.json({ message: 'Session ID received and validated successfully.'});
-}); 
+  res.json({ message: 'Session ID received and validated successfully.' });
+});
 
 
 // Validation function (same as in Endpoint 1)
 async function validateSession(s_id, token) {
   try {
-      var sid = s_id
-      url = `${django_endpoint_baseurl}/api/authuser?sessionkey=${sid}`
-      if(token){
-        const options = {
-          method: 'GET',
-          url:url,
-          headers: {Authorization: `Token ${token}`}
-        };
-        const response =  await axios(options);
-        return response.data;
-      }
-    } catch (error) {
-      console.error('Error validating session with Django:', error);
-      throw error;
+    var sid = s_id
+    url = `${django_endpoint_baseurl}/api/authuser?sessionkey=${sid}`
+    if (token) {
+      const options = {
+        method: 'GET',
+        url: url,
+        headers: { Authorization: `Token ${token}` }
+      };
+      const response = await axios(options);
+      return response.data;
     }
+  } catch (error) {
+    console.error('Error validating session with Django:', error);
+    throw error;
   }
+}
 
 
 // Function to decode jwt token recieves 
 async function decodeJwt(token) {
-    try {
-        const decodedToken = jwt.decode(token);
-        return decodedToken;
-    } catch (error) {
-        console.error('Error decoding JWT:', error);
-        return null;
-    }
+  try {
+    const decodedToken = jwt.decode(token);
+    return decodedToken;
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
 }
 
+async function checkStoreExists(storeHash, storeToken) {
+  try {
+    const url = `https://api.bigcommerce.com/stores/${storeHash}/v2/store`;
+    const config = {
+      method: 'get',
+      url: url,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-Auth-Token': storeToken,
+      },
+    };
+    const response = await axios(config);
 
-  app.post('/api/login', async (req, res) => {
-    const { storeHash, storeToken,jwt_token } = req.body;    
-    console.log('what is req',req.body)
-
-    const decodedData = await decodeJwt(jwt_token);    
-    console.log('what is decoded data',decodedData)
-
-    const {useremail,userid} = decodedData.user
-
-
-
-    console.log('what is data to send >>>',userid, useremail, storeHash, storeToken)
-
-
-    console.log('store hash and token is exists')
-
-
-    console.log('stored in db successfull ===>')
-
-    // Validate user credentials with BigCommerce API
-    try {
-      const url = `https://api.bigcommerce.com/stores/${storeHash}/v2/store`;
-    
-      const config = {
-        method: 'get',
-        url: url,
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-Auth-Token': storeToken,
-        },
-      };
-  
-      const response = await axios(config);
-
-      // console.log('store response =====>',response.data)
-
-      var userstoreData = {
-        "store_name":response.data.name,
-        "store_logo":response.data.logo.url,
-        "default_channel_id":response.data.default_channel_id
+    var storeData = {}
+    if (response.data) {
+      const store_response_data = response.data
+      storeData = {
+        'store_status': 'active',
+        'storeId': store_response_data.id,
+        'storeName': store_response_data.name
       }
-
-      // console.log('what is my userstoredata',userstoreData)
-
-      if(decodedData.user.useremail){
-        if (response.status === 200) {
-          // Successful validation
-          // console.log("Validate completed");
-          // res.json({ message: 'Store validation successful',user:decodedData.user});
-
-          const users = new UserData({userid, useremail, storeHash, storeToken})
-          await users.save();
-
-          res.json({ 
-            message: 'Store validation successful',
-            status:200,
-            user: decodedData.user,// Sending user data extracted from the decoded token,
-            storedata:userstoreData
-        });
-
-        } else {
-          // Failed validation
-          // console.log("validation failed");
-          res.status(response.status).json({ message: 'Store validation failed' });
-        }
-      }
-    } catch (error) {
-      console.error('Error during store validation:', error);
-      res.status(500).json({ message: 'Error during store validation' });
     }
-  });
-  
+    return storeData;
+  } catch (error) {
+    console.error('Error faced with store validation')
+  }
+}
+
+app.post('/api/login', async (req, res) => {
+  const { storeHash, storeToken, jwt_token } = req.body;
+  const decodedData = await decodeJwt(jwt_token);
+  var storeExists = '';
+
+  console.log('what is decoded data ===>', decodedData)
+  if (decodedData) {
+    const { useremail, userid, have_access_for_product_tool } = decodedData.user;
+    storeExists = await checkStoreExists(storeHash, storeToken)
+
+
+    console.log('what is storeExists value ==========>', storeExists)
+
+    console.log('===heloo=====',have_access_for_product_tool)
+
+    if (storeExists && storeExists.storeId) {
+        if(have_access_for_product_tool == true){
+          const existingUser = await UserData.findOne({ $or: [{ userid }, { useremail }] });
+
+          if(existingUser){
+            console.log('User with this ID or email already exists.');
+          }else{
+            console.log('createng a new user in db')
+            const users = new UserData({ userid, useremail, storeHash, storeToken })
+            await users.save();
+          }
+
+          res.json({
+            message: 'User have access to the app and store is valid',
+            status: 200,
+            pendingstatus:true
+          });
+        
+
+        }
+    } else {
+       res.json({
+        message: 'User have no access to the app and store is valid',
+        status: 500,
+        pendingstatus:false
+       });
+    }
+
+  }
+
+
+ 
+
+
+});
+
 
 
 
