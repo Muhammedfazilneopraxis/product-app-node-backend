@@ -132,6 +132,20 @@ async function decodeJwt(token) {
   }
 }
 
+
+async function generateJwtToken(uid){
+  const secretKey = 'your_secret_key';
+
+  const u_data = {
+    id: uid,
+    status: 'logged'
+  };
+  
+  // Generate the JWT token with the user payload and secret key
+  const token = jwt.sign(u_data, secretKey, { expiresIn: '8h' }); 
+  return token;
+}
+
 async function checkStoreExists(storeHash, storeToken) {
   try {
     const url = `https://api.bigcommerce.com/stores/${storeHash}/v2/store`;
@@ -164,6 +178,7 @@ async function checkStoreExists(storeHash, storeToken) {
 app.post('/api/login', async (req, res) => {
   const { storeHash, storeToken, jwt_token } = req.body;
   const decodedData = await decodeJwt(jwt_token);
+  
   var storeExists = '';
 
   console.log('what is decoded data ===>', decodedData)
@@ -171,14 +186,10 @@ app.post('/api/login', async (req, res) => {
     const { useremail, userid, have_access_for_product_tool } = decodedData.user;
     storeExists = await checkStoreExists(storeHash, storeToken)
 
-
-    console.log('what is storeExists value ==========>', storeExists)
-
-    console.log('===heloo=====',have_access_for_product_tool)
-
     if (storeExists && storeExists.storeId) {
         if(have_access_for_product_tool == true){
           const existingUser = await UserData.findOne({ $or: [{ userid }, { useremail }] });
+
 
           if(existingUser){
             console.log('User with this ID or email already exists.');
@@ -188,10 +199,14 @@ app.post('/api/login', async (req, res) => {
             await users.save();
           }
 
+        
+          unique_logged_token = await generateJwtToken(userid)
+          
           res.json({
             message: 'User have access to the app and store is valid',
             status: 200,
-            pendingstatus:true
+            pendingstatus:true,
+            token:unique_logged_token
           });
         
 
