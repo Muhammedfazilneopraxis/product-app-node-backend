@@ -88,37 +88,26 @@ app.listen(port, () => {
 var userData = {}
 
 
-// Get the current user session id
-app.post('/get_current_sid', async (req, res) => {
-  // console.log('what is get current sid')
-
-  // const s_id = req.body.current_id;  
-  // const token = req.body.current_token;   
-  // userData = await validateSession(s_id,token)
-  // console.log('<<<<<<< USER DATA IS HERE 555 >>>>>>>>>>',userData)
-  res.json({ message: 'Session ID received and validated successfully.' });
-});
-
 
 // Validation function (same as in Endpoint 1)
-async function validateSession(s_id, token) {
-  try {
-    var sid = s_id
-    url = `${django_endpoint_baseurl}/api/authuser?sessionkey=${sid}`
-    if (token) {
-      const options = {
-        method: 'GET',
-        url: url,
-        headers: { Authorization: `Token ${token}` }
-      };
-      const response = await axios(options);
-      return response.data;
-    }
-  } catch (error) {
-    console.error('Error validating session with Django:', error);
-    throw error;
-  }
-}
+// async function validateSession(s_id, token) {
+//   try {
+//     var sid = s_id
+//     url = `${django_endpoint_baseurl}/api/authuser?sessionkey=${sid}`
+//     if (token) {
+//       const options = {
+//         method: 'GET',
+//         url: url,
+//         headers: { Authorization: `Token ${token}` }
+//       };
+//       const response = await axios(options);
+//       return response.data;
+//     }
+//   } catch (error) {
+//     console.error('Error validating session with Django:', error);
+//     throw error;
+//   }
+// }
 
 
 // Function to decode jwt token recieves 
