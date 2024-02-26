@@ -6,6 +6,7 @@ const bodyParser = require('body-parser'); // Added for parsing request body
 
 
 
+
 var request = require('request');
 require('dotenv').config();
 const app = express();
@@ -110,35 +111,11 @@ var userData = {}
 
 // Get the current user session id
 app.post('/get_current_sid', async (req, res) => {
-  // console.log('what is get current sid')
-
-  // const s_id = req.body.current_id;  
-  // const token = req.body.current_token;   
-  // userData = await validateSession(s_id,token)
-  // console.log('<<<<<<< USER DATA IS HERE 555 >>>>>>>>>>',userData)
   res.json({ message: 'Session ID received and validated successfully.' });
 });
 
 
-// Validation function (same as in Endpoint 1)
-async function validateSession(s_id, token) {
-  try {
-    var sid = s_id
-    url = `${django_endpoint_baseurl}/api/authuser?sessionkey=${sid}`
-    if (token) {
-      const options = {
-        method: 'GET',
-        url: url,
-        headers: { Authorization: `Token ${token}` }
-      };
-      const response = await axios(options);
-      return response.data;
-    }
-  } catch (error) {
-    console.error('Error validating session with Django:', error);
-    throw error;
-  }
-}
+
 
 
 // Function to decode jwt token recieves 
@@ -158,7 +135,8 @@ async function generateJwtToken(sid,uid){
 
   const u_data = {
     id: sid,
-    uid:uid
+    uid:uid,
+    status:true
   };
   
   // Generate the JWT token with the user payload and secret key
@@ -241,6 +219,7 @@ app.post('/api/login', async (req,res) => {
   const  validate_verified_token =  await authenticate_user_with_jwt_token(req)
 
   if(validate_verified_token){
+    console.log('what is session data >>>>>>> 0000000',req.session)
     req.session.userData = validate_verified_token;
 
     console.log('My unique session id',req.session.id)
@@ -250,112 +229,62 @@ app.post('/api/login', async (req,res) => {
     storeExists = await checkStoreExists(req.session.storeHash, req.session.storeToken)
 
 
+    console.log('user id is here ====>',req.session.userData.data.id)
+    console.log('user id is here  333333333333====>',req.session.userData)
+
+
     // It will be the user id dynamically get from the session
-    uid = 1223;
+    uid = req.session.userData.data.id;
 
     console.log('what is my store status =========>',storeExists)
 
     if(storeExists){
-      console.log('Store is there=======>')
       unique_logged_token = await generateJwtToken(req.session.id,uid)
-      console.log('these is my unique_logged_token here 8888',unique_logged_token)
-
       req.session.signedtoken =  unique_logged_token
-
       ult_token = req.session.signedtoken
 
-      console.log('buddy session data ====',req.session)
-
-
-
-     res.json({
-            "ult": ult_token,
-      });
-
-    
-      
+     res.json({"ult": ult_token});
     }else{
       console.log('store not exists')
-
-      res.json({
-        "message": 'store not exists error',
-      });
+      res.json({"message": 'store not exists error'});
     }
 
 
   }else{
     console.log('JWT TOKEN IS NOT A VALID TOKEN VERIFIED FROM DJANGO SIDE')
-    res.json({
-      "message": 'jwt token is not valid',
-    });
+    res.json({"message": 'jwt token is not valid'});
   }
-
-
-
-
-
-
-  // const decodedData = await decodeJwt(jwt_token);
-  
-  // var storeExists = '';
-
-  // console.log('what is decoded data ===>', decodedData)
-
-  // res.json({
-  //         message: 'Login data recieved',
-  // });
-  
-  // if (decodedData) {
-  //   const { useremail, userid, have_access_for_product_tool } = decodedData.user;
-  //   storeExists = await checkStoreExists(storeHash, storeToken)
-
-  //   if (storeExists && storeExists.storeId) {
-  //       if(have_access_for_product_tool == true){
-  //         const existingUser = await UserData.findOne({ $or: [{ userid }, { useremail }] });
-
-
-  //         if(existingUser){
-  //           console.log('User with this ID or email already exists.');
-  //         }else{
-  //           console.log('createng a new user in db')
-  //           const users = new UserData({ userid, useremail, storeHash, storeToken })
-  //           await users.save();
-  //         }
-
-        
-  //         unique_logged_token = await generateJwtToken(userid)
-          
-  //         res.json({
-  //           message: 'User have access to the app and store is valid',
-  //           status: 200,
-  //           pendingstatus:true,
-  //           token:unique_logged_token
-  //         });
-        
-
-  //       }
-  //   } else {
-  //      res.json({
-  //       message: 'User have no access to the app and store is valid',
-  //       status: 500,
-  //       pendingstatus:false
-  //      });
-  //   }
-
-  // }
-
-
- 
-
-
 });
 
 
 
+async function validateJwtToken(token) {
+  try {
+    const secretKey = 'your_secret_key';
+    // Decode the JWT token
+    const decoded = jwt.verify(token, secretKey);
+    // If decoding is successful, return the decoded token
+    return decoded;
+  } catch (error) {
+    // If an error occurs (e.g., token is invalid or expired), handle it
+    // For simplicity, just log the error here
+    console.error('JWT validation failed:', error.message);
+    return null;
+  }
+}
 
-
-
-
-
-
+// Endpoint which validate the ult token 
+app.post('/api/validateutoken', async (req, res) => {
+  const ult_token = req.body.ult.ult;
+  if(ult_token){
+    const decodedToken = await validateJwtToken(ult_token);
+    if (decodedToken != null) {
+      console.log('Token is valid:', decodedToken);
+      res.json({ status: true });
+    } else {
+      console.log('Token is invalid.');
+      res.json({ status: false });
+    }
+  }
+});
 
