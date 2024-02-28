@@ -7,9 +7,10 @@ const conn = async(req,res) => {
             console.log("connected")
         })
     } catch (error) {
-        res.status(400,{message:"not connected"})
-    }
-    
-}
+        if (res && res.status) {
+         res.status(400,{message:"not connected"})    
+        }
 
+    }   
+}
 conn()
