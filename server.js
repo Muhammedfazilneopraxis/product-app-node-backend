@@ -132,7 +132,6 @@ async function decodeJwt(token) {
 
 async function generateJwtToken(sid,uid){
   const secretKey = 'your_secret_key';
-
   const u_data = {
     id: sid,
     uid:uid,
@@ -258,32 +257,41 @@ app.post('/api/login', async (req,res) => {
 
 
 
-async function validateJwtToken(token) {
+
+
+async function verifyToken(token) {
+  const publicKey = 'your_secret_key'; // Replace with your public key
   try {
-    const secretKey = 'your_secret_key';
-    // Decode the JWT token
-    const decoded = jwt.verify(token, secretKey);
-    // If decoding is successful, return the decoded token
-    return decoded;
+      const decoded = jwt.verify(token, publicKey);
+      // Check expiration time and status
+      if (decoded.exp >= Date.now() / 1000 && decoded.status === true) {
+        return true;
+      } else {
+        return false;
+      }
   } catch (error) {
-    // If an error occurs (e.g., token is invalid or expired), handle it
-    // For simplicity, just log the error here
-    console.error('JWT validation failed:', error.message);
-    return null;
+      return false;
   }
 }
+
 
 // Endpoint which validate the ult token 
 app.post('/api/validateutoken', async (req, res) => {
   const ult_token = req.body.ult.ult;
+  console.log('==================================================')
+  console.log('<<<<<<<<<<<<<<<<< ULT TOKEN IS HERE >>>>>>>>>>>>>>>>>>>>>>')
+  console.log('ult_token ===> ',ult_token)
+
+  console.log('==================================================')
+
   if(ult_token){
-    const decodedToken = await validateJwtToken(ult_token);
+    const decodedToken = await verifyToken(ult_token);
     if (decodedToken != null) {
       console.log('Token is valid:', decodedToken);
-      res.json({ status: true });
+      res.json({ status: decodedToken });
     } else {
       console.log('Token is invalid.');
-      res.json({ status: false });
+      res.json({ status: decodedToken });
     }
   }
 });
